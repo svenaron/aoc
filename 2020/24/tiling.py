@@ -19,15 +19,15 @@ def flip(black):
 
 def parse(data):
     directions = data.strip().split('\n')
-    flips = set()
+    black = set()
     for line in directions:
         steps = [delta[s] for s in re.findall(r'(e|w|se|sw|ne|nw)', line)]
         tile = tuple([sum(i) for i in zip(*steps)])
         try:
-            flips.remove(tile)
+            black.remove(tile)
         except KeyError:
-            flips.add(tile)
-    return flips
+            black.add(tile)
+    return black
 
 def test():
     with open('sample') as f:
@@ -37,14 +37,15 @@ def test():
     print("test1", t1)
     for i in range(100):
         tiles = flip(tiles)
-        if i < 10 or (i + 1) % 10 == 0:
-            print("Day", i + 1, len(tiles))
-    return t1 == 10
+    t2 = len(tiles)
+    print("test2", t2)
+    return t1 == 10 and t2 == 2208
 
 if __name__ == "__main__":
     import sys
     if not test():
         sys.exit(1)
+    print("Tests OK")
     if len(sys.argv) > 1:
         with open(sys.argv[1]) as f:
             data = f.read().strip()
