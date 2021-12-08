@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from itertools import permutations
+from cProfile import Profile
 
 sample = """be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
 edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
@@ -24,11 +25,30 @@ key = {"abcefg" : "0",
        "abcdefg": "8",
        "abcdfg" : "9", }
 
-perms = set(permutations("abcdefg"))
+short_key = {k: v for k, v in key.items() if v not in "147"}
 
-def test(wiring, txl):
-    options = dict(key)
-    for digit in sorted(wiring, key=len):
+txls = [{k: v for k, v in zip("abcdefg", p)}
+        for p in set(permutations("abcdefg"))]
+
+def test1(wiring, txl):
+    one, seven, four = wiring[:3]
+    for c in seven:
+        if c not in one:
+            if txl[c] != 'a':
+                return False
+        if txl[c] not in "acf":
+            return False
+    for c in one:
+        if txl[c] not in "cf":
+            return False
+    for c in four:
+        if txl[c] not in "bcdf":
+            return False
+    return test2(wiring[3:], txl)
+
+def test2(wiring, txl):
+    options = dict(short_key)
+    for digit in wiring:
         d = "".join(sorted([txl[d] for d in digit]))
         try:
             options.pop(d)
@@ -44,9 +64,9 @@ def translate(output, txl):
     return int(r)
 
 def findnumber(wiring, output):
-    for p in perms:
-        txl = {k: v for k,v in zip("abcdefg", p)}
-        if test(wiring, txl):
+    wiring.sort(key=len)
+    for txl in txls:
+        if test1(wiring, txl):
             return translate(output, txl)
 
 def search(data):
@@ -62,4 +82,6 @@ if __name__ == "__main__":
     print("sample", search(sample))
     with open('input') as f:
         data = f.read().strip()
-    print("input", search(data))
+    with Profile() as p:
+        print("input", search(data))
+    p.print_stats()
